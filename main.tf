@@ -204,6 +204,19 @@ module "ec2_instances" {
     Environment = "non-prod"
   }
 }
+  name                   = each.value.name
+  instance_type          = each.value.instance_type
+  key_name               = var.key_name
+  monitoring             = true
+  vpc_security_group_ids = [module.non_prod_sg.security_group_id]
+  subnet_id              = each.value.subnet_id
+  ami                    = each.value.ami
+
+  tags = {
+    Terraform   = "true"
+    Environment = "non-prod"
+  }
+}
 
 # Application Load Balancer
 module "alb" {

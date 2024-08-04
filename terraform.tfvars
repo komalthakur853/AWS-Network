@@ -16,3 +16,6 @@ vpc_non_prod_private_subnets = ["10.1.3.0/24", "10.1.4.0/24"]
 # Mgmt VPC subnets
 vpc_mgmt_public_subnets  = ["10.2.1.0/24", "10.2.2.0/24"]
 vpc_mgmt_private_subnets = ["10.2.3.0/24", "10.2.4.0/24"]
+
+# Key-name 
+key_name = "aws"

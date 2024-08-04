@@ -3,14 +3,14 @@
 # AWS Prod Network VPC
 module "vpc_prod" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "~> 3.0"  # Specify a version for better stability
+  version = "~> 5.0" # Specify a version for better stability
 
-  name    = "AWS-prod-Network"
-  cidr    = var.vpc_prod_cidr
-  azs     = data.aws_availability_zones.available.names
+  name            = "AWS-prod-Network"
+  cidr            = var.vpc_prod_cidr
+  azs             = data.aws_availability_zones.available.names
   private_subnets = var.vpc_prod_private_subnets
   public_subnets  = var.vpc_prod_public_subnets
-  
+
   enable_dns_hostnames = true
   enable_nat_gateway   = true
   single_nat_gateway   = true
@@ -20,11 +20,11 @@ module "vpc_prod" {
     Terraform   = "true"
     Environment = "prod"
   }
-  
+
   public_subnet_tags = {
     Name = "AWS-prod-public-subnet"
   }
-  
+
   private_subnet_tags = {
     Name = "AWS-prod-private-subnet"
   }
@@ -33,14 +33,14 @@ module "vpc_prod" {
 # AWS Non-prod Network VPC
 module "vpc_non_prod" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "~> 3.0"
+  version = "~> 5.0"
 
-  name    = "AWS-Non-prod-Network"
-  cidr    = var.vpc_non_prod_cidr
-  azs     = data.aws_availability_zones.available.names
+  name            = "AWS-Non-prod-Network"
+  cidr            = var.vpc_non_prod_cidr
+  azs             = data.aws_availability_zones.available.names
   private_subnets = var.vpc_non_prod_private_subnets
   public_subnets  = var.vpc_non_prod_public_subnets
-  
+
   enable_dns_hostnames = true
   enable_nat_gateway   = true
   single_nat_gateway   = true
@@ -50,11 +50,11 @@ module "vpc_non_prod" {
     Terraform   = "true"
     Environment = "non-prod"
   }
-  
+
   public_subnet_tags = {
     Name = "AWS-Non-prod-public-subnet"
   }
-  
+
   private_subnet_tags = {
     Name = "AWS-Non-prod-private-subnet"
   }
@@ -63,14 +63,14 @@ module "vpc_non_prod" {
 # AWS Mgmt Network VPC
 module "vpc_mgmt" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "~> 3.0"
+  version = "~> 5.0"
 
-  name    = "AWS-mgmt-Network"
-  cidr    = var.vpc_mgmt_cidr
-  azs     = data.aws_availability_zones.available.names
+  name            = "AWS-mgmt-Network"
+  cidr            = var.vpc_mgmt_cidr
+  azs             = data.aws_availability_zones.available.names
   private_subnets = var.vpc_mgmt_private_subnets
   public_subnets  = var.vpc_mgmt_public_subnets
-  
+
   enable_dns_hostnames = true
   enable_nat_gateway   = true
   single_nat_gateway   = true
@@ -80,11 +80,12 @@ module "vpc_mgmt" {
     Terraform   = "true"
     Environment = "mgmt"
   }
-  
+
+
   public_subnet_tags = {
     Name = "AWS-mgmt-public-subnet"
   }
-  
+
   private_subnet_tags = {
     Name = "AWS-mgmt-private-subnet"
   }
@@ -153,10 +154,9 @@ module "non_prod_sg" {
   }
 }
 
-# EC2 Instances in Non-prod Network
 module "ec2_instances" {
   source  = "terraform-aws-modules/ec2-instance/aws"
-  version = "~> 3.0"
+  version = "~> 5.0"
 
   for_each = {
     "redis_standalone" = {
@@ -191,28 +191,17 @@ module "ec2_instances" {
     }
   }
 
-  name                   = each.value.name
+  name = each.value.name
+
+  ami                    = each.value.ami
   instance_type          = each.value.instance_type
   key_name               = var.key_name
   monitoring             = true
   vpc_security_group_ids = [module.non_prod_sg.security_group_id]
   subnet_id              = each.value.subnet_id
-  ami                    = each.value.ami
 
   tags = {
-    Terraform   = "true"
-    Environment = "non-prod"
-  }
-}
-  name                   = each.value.name
-  instance_type          = each.value.instance_type
-  key_name               = var.key_name
-  monitoring             = true
-  vpc_security_group_ids = [module.non_prod_sg.security_group_id]
-  subnet_id              = each.value.subnet_id
-  ami                    = each.value.ami
-
-  tags = {
+    Name        = each.value.name
     Terraform   = "true"
     Environment = "non-prod"
   }

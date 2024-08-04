@@ -51,3 +51,8 @@ variable "vpc_mgmt_public_subnets" {
   type        = list(string)
   default     = ["10.2.101.0/24", "10.2.102.0/24"]
 }
+
+variable "key_name" {
+  description = "The key pair name for EC2 instances"
+  type        = string
+}

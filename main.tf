@@ -1,9 +1,7 @@
-# main.tf
-
 # AWS Prod Network VPC
 module "vpc_prod" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "~> 5.0" # Specify a version for better stability
+  version = "~> 5.0"
 
   name            = "AWS-prod-Network"
   cidr            = var.vpc_prod_cidr

@@ -197,6 +197,7 @@ module "ec2_instances" {
   monitoring             = true
   vpc_security_group_ids = [module.non_prod_sg.security_group_id]
   subnet_id              = each.value.subnet_id
+  associate_public_ip_address = each.value.ami != data.aws_ami.redis.id
 
   tags = {
     Name        = each.value.name

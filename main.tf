@@ -134,6 +134,13 @@ module "non_prod_sg" {
       description = "Redis Insight"
       cidr_blocks = "0.0.0.0/0"
     }
+    {
+      from_port   = 26379
+      to_port     = 26379
+      protocol    = "tcp"
+      description = "Redis Senital"
+      cidr_blocks = "0.0.0.0/0"
+    }
   ]
 
   egress_with_cidr_blocks = [

@@ -7,12 +7,22 @@ pipeline {
         AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
         AWS_DEFAULT_REGION = "us-east-2"
-        TERRAFORM_DIR = "redis-terra-tool"
+        TERRAFORM_DIR = "."
     }
     stages {
         stage('Checkout SCM') {
             steps {
-                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/komalthakur853/redis-eval.git']])
+                checkout([$class: 'GitSCM', 
+                    branches: [[name: '*/main']], 
+                    userRemoteConfigs: [[url: 'https://github.com/komalthakur853/AWS-Network.git']],
+                    extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'AWS-Network']]
+                ])
+            }
+        }
+        stage('Debug Checkout') {
+            steps {
+                sh 'pwd'
+                sh 'ls -R'
             }
         }
         stage('Diagnostic Information') {
@@ -25,7 +35,7 @@ pipeline {
         }
         stage('Navigate to Terraform Directory') {
             steps {
-                dir(env.TERRAFORM_DIR) {
+                dir('AWS-Network') {
                     sh 'pwd'
                     sh 'ls -la'
                     sh 'cat main.tf || echo "main.tf not found"'
@@ -34,37 +44,38 @@ pipeline {
         }
         stage('Initializing Terraform') {
             steps {
-                dir(env.TERRAFORM_DIR) {
-                    sh 'terraform init'
+                dir('AWS-Network') {
+                    sh 'ls -la'
+                    sh 'terraform init || (echo "Terraform init failed"; exit 1)'
                 }
             }
         }
         stage('Formatting Terraform Code') {
             steps {
-                dir(env.TERRAFORM_DIR) {
-                    sh 'terraform fmt -check || true'
+                dir('AWS-Network') {
+                    sh 'terraform fmt -check || echo "Terraform fmt check failed"'
                 }
             }
         }
         stage('Validating Terraform') {
             steps {
-                dir(env.TERRAFORM_DIR) {
-                    sh 'terraform validate'
+                dir('AWS-Network') {
+                    sh 'terraform validate || (echo "Terraform validation failed"; exit 1)'
                 }
             }
         }
         stage('Previewing the Infra using Terraform') {
             steps {
-                dir(env.TERRAFORM_DIR) {
-                    sh 'terraform plan -out=tfplan'
+                dir('AWS-Network') {
+                    sh 'terraform plan -out=tfplan || (echo "Terraform plan failed"; exit 1)'
                 }
                 input(message: "Are you sure to proceed with applying the changes?", ok: "Apply")
             }
         }
         stage('Applying Terraform Configuration') {
             steps {
-                dir(env.TERRAFORM_DIR) {
-                    sh 'terraform apply -auto-approve tfplan'
+                dir('AWS-Network') {
+                    sh 'terraform apply -auto-approve tfplan || (echo "Terraform apply failed"; exit 1)'
                 }
             }
         }
@@ -73,8 +84,8 @@ pipeline {
                 script {
                     if (params.ACTION == 'destroy') {
                         input(message: "Do you want to destroy the infrastructure?", ok: "Destroy")
-                        dir(env.TERRAFORM_DIR) {
-                            sh 'terraform destroy -auto-approve'
+                        dir('AWS-Network') {
+                            sh 'terraform destroy -auto-approve || (echo "Terraform destroy failed"; exit 1)'
                         }
                     } else {
                         echo 'Skipping destroy as per user choice.'
@@ -89,6 +100,9 @@ pipeline {
         }
         failure {
             echo 'The Pipeline failed :('
+        }
+        success {
+            echo 'The Pipeline completed successfully!'
         }
     }
 }

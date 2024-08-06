@@ -38,6 +38,7 @@ module "vpc_non_prod" {
   azs             = data.aws_availability_zones.available.names
   private_subnets = var.vpc_non_prod_private_subnets
   public_subnets  = var.vpc_non_prod_public_subnets
+  user_data       = each.key != "observability" ? file("/home/komal_jaiswal/AWS-Network/debian_dependency_installation.sh") : ""
 
   enable_dns_hostnames = true
   enable_nat_gateway   = true

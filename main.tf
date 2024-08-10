@@ -167,21 +167,21 @@ module "ec2_instances" {
   for_each = {
     "redis_standalone" = {
       name          = "redis-standalone"
-      instance_type = "t2.medium"
+      instance_type = "t2.micro"
       subnet_id     = module.vpc_non_prod.private_subnets[0]
       ami           = data.aws_ami.redis.id
       public_ip     = false
     },
     "redis_sentinel" = {
       name          = "redis-sentinel"
-      instance_type = "t2.medium"
+      instance_type = "t2.micro"
       subnet_id     = module.vpc_non_prod.private_subnets[0]
       ami           = data.aws_ami.redis.id
       public_ip     = false
     },
     "redis_cluster" = {
       name          = "redis-cluster"
-      instance_type = "t2.medium"
+      instance_type = "t2.micro"
       subnet_id     = module.vpc_non_prod.private_subnets[0]
       ami           = data.aws_ami.redis.id
       public_ip     = false

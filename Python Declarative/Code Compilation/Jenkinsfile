@@ -1,0 +1,73 @@
+properties([
+    parameters([
+        string(name: 'BRANCH', defaultValue: 'main', description: 'Git branch to checkout'),
+        string(name: 'BANDIT_REPORT_FILE', defaultValue: 'bandit_report.txt', description: 'File name for Bandit report'),
+        booleanParam(name: 'CLEAN_WORKSPACE', defaultValue: true, description: 'Clean workspace after build')
+    ])
+])
+
+node {
+    // Parameters
+    def branch = params.BRANCH ?: 'main'
+    def banditReportFile = params.BANDIT_REPORT_FILE ?: 'bandit_report.txt'
+    def cleanWorkspace = params.CLEAN_WORKSPACE ?: true
+
+    stage('Checkout') {
+        echo "Current workspace: ${env.WORKSPACE}"
+        checkout([$class: 'GitSCM', branches: [[name: "*/${branch}"]], userRemoteConfigs: [[url: 'https://github.com/OT-MICROSERVICES/attendance-api.git']]])
+    }
+
+    stage('Setup Python Virtual Environment') {
+        script {
+            // Create a virtual environment if it doesn't exist
+            if (!fileExists('venv')) {
+                echo "Creating virtual environment..."
+                sh 'python3 -m venv venv'
+            }
+
+            // Install Bandit in the virtual environment
+            sh '''
+                echo "Upgrading pip..."
+                venv/bin/pip install --upgrade pip
+
+                if ! venv/bin/pip show bandit &> /dev/null; then
+                    echo "Installing Bandit..."
+                    venv/bin/pip install bandit
+                else
+                    echo "Bandit is already installed."
+                fi
+            '''
+        }
+    }
+
+    stage('Set PATH') {
+        script {
+            env.PATH = "${env.WORKSPACE}/venv/bin:${env.PATH}"
+            echo "Updated PATH: ${env.PATH}"
+        }
+    }
+
+    stage('Bug Analysis') {
+        try {
+            echo "Running Bandit for security analysis..."
+            sh "bandit -r . -f txt -o ${banditReportFile} || true"
+            echo "Bandit analysis completed. Report generated: ${banditReportFile}"
+        } catch (Exception e) {
+            echo "Bandit analysis failed: ${e.getMessage()}"
+        }
+    }
+
+    stage('Archive Report') {
+        try {
+            archiveArtifacts artifacts: "${banditReportFile}", allowEmptyArchive: true
+        } catch (Exception e) {
+            echo "Failed to archive report: ${e.getMessage()}"
+        }
+    }
+
+    // Cleanup workspace if the parameter is true
+    if (cleanWorkspace) {
+        echo 'Cleaning up workspace...'
+        cleanWs()
+    }
+}
